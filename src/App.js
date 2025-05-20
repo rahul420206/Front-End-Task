@@ -36,8 +36,8 @@ function App() {
       >
         <Card
           sx={{
-            width: 600,         // Portrait width
-            height: 700,        // Portrait height
+            width: 650,         // Portrait width
+            height: 665,        // Portrait height
             borderRadius: 3,
             boxShadow: 3,
             overflow: 'hidden',

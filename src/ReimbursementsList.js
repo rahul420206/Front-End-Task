@@ -14,11 +14,11 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import AttachMoneyRoundedIcon from '@mui/icons-material/AttachMoneyRounded';
 
-// Dummy data for the list items (replace with your actual data source)
 const dummyReimbursements = [
   { id: 1, name: 'Flight Tickets', category: 'Travel', details: 'Adding to Credit Summary', amount: 500 },
   { id: 2, name: 'Phone Bill', category: 'Travel', details: 'Adding to payroll', amount: 100 },
   { id: 3, name: 'Train Tickets', category: 'Travel', details: 'Adding to payroll', amount: 200 },
+  
 ];
 
 function ReimbursementsList({ onAddNew }) {
@@ -27,8 +27,7 @@ function ReimbursementsList({ onAddNew }) {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        
-        <Typography variant="h6" style={{ marginTop: '12px' }}>
+        <Typography variant="h7" sx={{ padding: '0 16px', mt: 2.25 }}>
           Added Reimbursements
         </Typography>
         <Button
@@ -36,7 +35,9 @@ function ReimbursementsList({ onAddNew }) {
           onClick={onAddNew}
           sx={{
             textTransform: 'none',
-            marginTop: '8px', 
+            mt: 1.5,
+            mr: 1.5,
+            backgroundColor: '#2876ea',
           }}
         >
           Add New
@@ -52,7 +53,7 @@ function ReimbursementsList({ onAddNew }) {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       {/* Amount with currency icon */}
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                         <AttachMoneyRoundedIcon fontSize="small" sx={{ mr: 0 }} /> {/* Adjusted mr */}
+                         <AttachMoneyRoundedIcon fontSize="small" sx={{ mr: 0.5 }} /> {/* Adjusted mr */}
                          <Typography variant="body1">{reimbursement.amount}</Typography>
                       </Box>
 
@@ -71,7 +72,21 @@ function ReimbursementsList({ onAddNew }) {
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                  {/* Icon on the left (color changed to match reimbursement icon) */}
                  {/* Ensure the color here is the intended one, '#1976d2' (MUI blue) or 'red' */}
-                 <ArrowOutwardIcon sx={{ mr: 1, color: 'red' }} />
+                 <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#fff5f5', // light red
+                    borderRadius: '50%',
+                    width: 32,
+                    height: 32,
+                    mr: 1,
+                  }}
+                >
+                  <ArrowOutwardIcon sx={{ color: 'red', fontSize: 20 }} />
+                </Box>
+
                 <ListItemText
                   primary={<Typography variant="body1" sx={{ fontWeight: 'medium' }}>{reimbursement.name}</Typography>}
                   // Add spaces around the bullet point for more separation
@@ -86,7 +101,7 @@ function ReimbursementsList({ onAddNew }) {
       </List>
 
       {/* Divider before the total section */}
-      <Divider sx={{ mt: 2, mb: 2 }} />
+      <Divider sx={{ mt: 2, mb: 1.5 }} />
 
       {/* Total Reimbursements section (will be pushed to the bottom) */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -95,7 +110,7 @@ function ReimbursementsList({ onAddNew }) {
         </Typography>
         {/* Box for the total amount including the currency icon */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <AttachMoneyRoundedIcon fontSize="small" sx={{ mr: 0 }} />
+            <AttachMoneyRoundedIcon fontSize="small"  />
             <Typography variant="body1"> {/* Changed to body1 for smaller text */}
               {totalReimbursements}
             </Typography>
@@ -103,16 +118,14 @@ function ReimbursementsList({ onAddNew }) {
       </Box>
 
       {/* Divider after the total section (based on image) */}
-       <Divider sx={{ mb: 2 }} />
+       <Divider sx={{ mb: 2.5 }} />
 
 
       {/* Done button (aligned to the right and pushed to the bottom) */}
       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Button
           variant="contained"
-          sx={{
-            textTransform: 'none',
-          }}
+          sx={{ textTransform: 'none', backgroundColor: '#2876ea', mr: 1.5 }}
         >
           Done
         </Button>
