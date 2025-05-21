@@ -1,13 +1,15 @@
+import React, { useState } from 'react';
 import MenuItem from '@mui/material/MenuItem';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 import FormHelperText from '@mui/material/FormHelperText';
+import Alert from '@mui/material/Alert'; 
 import { styled, TextField } from '@mui/material';
 import { Box, Typography, IconButton, Button } from '@mui/material';
-import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 
 const RedditTextField = styled((props) => (
   <TextField
@@ -33,7 +35,7 @@ const RedditTextField = styled((props) => (
     color: '#1976d2',
     fontSize: '0.875rem',
     '&.Mui-focused': {
-      color: '#1976d2', // Ensure label color stays consistent when focused
+      color: '#1976d2',
     },
     '&.MuiInputLabel-shrink': {
       fontSize: '0.95rem',
@@ -41,138 +43,191 @@ const RedditTextField = styled((props) => (
   },
 }));
 
-export default function AddDeductionForm({ onCancel }) {
+export default function AddDeductionForm({ onCancel, onSave, editId, editReimbursement, error }) {
+  const [formData, setFormData] = useState(
+    editReimbursement
+      ? {
+          name: editReimbursement.name,
+          type: editReimbursement.category,
+          date: editReimbursement.date,
+          deductFrom: editReimbursement.deductFrom,
+          amount: `$ ${editReimbursement.amount}`,
+          document: editReimbursement.document,
+          recurring: editReimbursement.recurring,
+          remarks: editReimbursement.remarks,
+        }
+      : {
+          name: '',
+          type: '',
+          date: new Date().toISOString().split('T')[0], 
+          deductFrom: '',
+          amount: '$ ',
+          document: 'Screenshot.20231203',
+          recurring: false,
+          remarks: '',
+        }
+  );
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  const handleSave = () => {
+    const amount = parseFloat(formData.amount.replace('$', '').trim());
+    if (isNaN(amount)) return;
+    if (!formData.date) return; 
+    onSave({
+      name: formData.name,
+      category: formData.type,
+      deductFrom: formData.deductFrom,
+      date: formData.date,
+      amount,
+      recurring: formData.recurring,
+      remarks: formData.remarks,
+      document: formData.document,
+    });
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', maxWidth: 600, margin: 'auto' }}>
-      {/* Scrollable Form Content Area */}
       <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h7" fontWeight="bold">
-            Add Deduction
+          <Typography variant="h6" fontWeight="bold">
+            {editId ? 'Edit Deduction' : 'Add Deduction'}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
             Current Balance: <Box component="span" sx={{ color: '#007be4', fontWeight: 'bold' }}>$6,426.00</Box>
           </Typography>
         </Box>
 
-        {/* Container for all form fields */}
+        {/* Added error alert */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         <Box>
-          {/* Row 1: Name and Type */}
           <Box sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
-            <RedditTextField fullWidth id="name" label="Name" defaultValue="Training" />
+            <RedditTextField
+              fullWidth
+              id="name"
+              name="name"
+              label="Name"
+              value={formData.name}
+              onChange={handleChange}
+            />
             <RedditTextField
               fullWidth
               id="type-select"
+              name="type"
               label="Type"
               select
-              defaultValue="Training Cost"
+              value={formData.type}
+              onChange={handleChange}
             >
               <MenuItem value="Training Cost">Training Cost</MenuItem>
-              <MenuItem value="My Salary">My Salary</MenuItem>
+              <MenuItem value="Travel">Travel</MenuItem>
               <MenuItem value="My Expenses">My Expenses</MenuItem>
             </RedditTextField>
           </Box>
 
-          {/* Row 2: Date of Expense and Deduct From */}
           <Box sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
             <RedditTextField
               fullWidth
               id="date-of-expense"
+              name="date"
               label="Date of Expense"
               type="date"
-              defaultValue="2022-01-02"
+              value={formData.date}
+              onChange={handleChange}
               InputLabelProps={{ shrink: true }}
               InputProps={{
                 endAdornment: (
-                  <IconButton 
-                  >
+                  <IconButton aria-label="calendar" title="Calendar" disableRipple>
                     <CalendarTodayOutlinedIcon fontSize="small" sx={{ color: '#1976d2' }} />
                   </IconButton>
                 ),
                 sx: {
-                  // Re-hide the default browser calendar icon
-                  '& input::-webkit-calendar-picker-indicator': {
-                    display: 'none',
-                  },
-                  // Ensure the input field is clickable
-                  '& input': {
-                    cursor: 'pointer',
-                    // Explicitly remove any borderBottom on the input element itself
-                    borderBottom: 'none',
-                  },
-                  '& .MuiInputAdornment-root': {
-                  }
+                  '& input::-webkit-calendar-picker-indicator': { display: 'none' },
+                  '& input': { cursor: 'pointer', borderBottom: 'none' },
                 },
               }}
               sx={{
                 '& .MuiFilledInput-root': {
                   paddingRight: '8px',
-                  // Override any potential browser-specific underlines and Material-UI underlines
-                  '&:before, &:after': {
-                    borderBottom: 'none !important', // Use !important to ensure override
-                  },
-                  // Remove underline on hover
-                  '&:hover:not(.Mui-disabled):before': {
-                    borderBottom: 'none !important',
-                  },
-
+                  '&:before, &:after': { borderBottom: 'none' },
                 },
               }}
             />
             <RedditTextField
               fullWidth
               id="deduct-from-select"
+              name="deductFrom"
               label="Deduct From"
               select
-              defaultValue="Payroll"
+              value={formData.deductFrom}
+              onChange={handleChange}
             >
               <MenuItem value="Payroll">Payroll</MenuItem>
-              <MenuItem value="Bank Balance">Bank Balance</MenuItem>
-              <MenuItem value="Kidney">Kidney</MenuItem>
+              <MenuItem value="Credit Summary">Credit Summary</MenuItem>
+              <MenuItem value="PF Fund">PF Fund</MenuItem>
             </RedditTextField>
           </Box>
 
-          {/* Row 3: Deduction Amount and Supporting Document */}
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 2 }}>
-            <RedditTextField fullWidth id="deduction-amount" label="Deduction Amount" defaultValue="$ 500" />
+            <RedditTextField
+              fullWidth
+              id="deduction-amount"
+              name="amount"
+              label="Deduction Amount"
+              value={formData.amount}
+              onChange={handleChange}
+            />
             <Box sx={{ width: '100%' }}>
               <RedditTextField
                 fullWidth
                 id="supporting-document"
+                name="document"
                 label="Supporting Document"
-                defaultValue="Screenshot.20231203"
+                value={formData.document}
+                onChange={handleChange}
                 InputProps={{
                   readOnly: true,
                   disableUnderline: true,
                   endAdornment: (
                     <>
-            <IconButton
-              aria-label="preview file"
-              title="Preview file"
-              sx={{
-                backgroundColor: '#f0f8ff', // Light blue background
-                borderRadius: 1,
-                px: 1.2,
-                py: 0.8,
-                mr: 0.5, // Small margin to separate icons
-              }}
-            >
-              <VisibilityOutlinedIcon fontSize="small" sx={{ color: '#1976d2' }} />
-            </IconButton>
-            <IconButton
-              aria-label="delete file"
-              title="Delete file"
-              sx={{
-                backgroundColor: '#fff5f5', // Light red background
-                borderRadius: 1,
-                px: 1.2,
-                py: 0.8,
-                mr: 1,
-                ml: 1 
-              }}
-            >
-              <DeleteOutlineOutlinedIcon fontSize="small" sx={{ color: 'red' }} />
-            </IconButton>
+                      <IconButton
+                        aria-label="preview file"
+                        title="Preview file"
+                        sx={{
+                          backgroundColor: '#f0f8ff',
+                          borderRadius: 1,
+                          px: 1.2,
+                          py: 0.8,
+                          mr: 0.5,
+                        }}
+                      >
+                        <VisibilityOutlinedIcon fontSize="small" sx={{ color: '#1976d2' }} />
+                      </IconButton>
+                      <IconButton
+                        aria-label="delete file"
+                        title="Delete file"
+                        sx={{
+                          backgroundColor: '#fff5f5',
+                          borderRadius: 1,
+                          px: 1.2,
+                          py: 0.8,
+                          mr: 1,
+                          ml: 1,
+                        }}
+                      >
+                        <DeleteOutlineOutlinedIcon fontSize="small" sx={{ color: 'red' }} />
+                      </IconButton>
                     </>
                   ),
                 }}
@@ -184,38 +239,51 @@ export default function AddDeductionForm({ onCancel }) {
             </Box>
           </Box>
 
-          {/* Recurring Deduction (Full Width) */}
           <FormGroup sx={{ mb: 1 }}>
             <FormControlLabel
-              control={<Checkbox defaultChecked={false} size="small" />}
+              control={
+                <Checkbox
+                  name="recurring"
+                  checked={formData.recurring}
+                  onChange={handleChange}
+                  size="small"
+                />
+              }
               label="Recurring Deduction"
               sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
             />
           </FormGroup>
 
-          {/* Remarks (Full Width) */}
           <RedditTextField
             fullWidth
             id="remarks"
+            name="remarks"
             label={
               <>
-                Remarks{' '}
-                <span style={{ color: 'rgba(0, 0, 0, 0.3)' }}>(Optional)</span>
+                Remarks <span style={{ color: 'rgba(0, 0, 0, 0.3)' }}>(Optional)</span>
               </>
             }
             multiline
             rows={2}
-            defaultValue=""
+            value={formData.remarks}
+            onChange={handleChange}
           />
         </Box>
       </Box>
 
-      {/* Action Buttons: Cancel and Save (Footer section) */}
       <Box sx={{ p: 2, backgroundColor: 'background.paper', display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-        <Button variant="text" onClick={onCancel} sx={{ textTransform: 'none', color: 'text.secondary' }}>
+        <Button
+          variant="text"
+          onClick={onCancel}
+          sx={{ textTransform: 'none', color: 'text.secondary' }}
+        >
           Cancel
         </Button>
-        <Button variant="contained" sx={{ textTransform: 'none', backgroundColor: '#2876ea' }}>
+        <Button
+          variant="contained"
+          onClick={handleSave}
+          sx={{ textTransform: 'none', backgroundColor: '#2876ea' }}
+        >
           Save
         </Button>
       </Box>
