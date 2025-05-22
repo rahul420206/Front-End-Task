@@ -7,9 +7,11 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 import FormHelperText from '@mui/material/FormHelperText';
-import Alert from '@mui/material/Alert'; 
+import Alert from '@mui/material/Alert';
 import { styled, TextField } from '@mui/material';
 import { Box, Typography, IconButton, Button } from '@mui/material';
+import moment from 'moment'; // Added Moment.js import
+import InputAdornment from '@mui/material/InputAdornment';
 
 const RedditTextField = styled((props) => (
   <TextField
@@ -27,10 +29,18 @@ const RedditTextField = styled((props) => (
     backgroundColor: '#FFFFFF',
     borderColor: '#E0E3E7',
     transition: theme.transitions.create(['border-color', 'box-shadow']),
-    '&:hover': {
-      backgroundColor: '#F5F5F5',
+    boxShadow: 'none',
+
+    '&::before, &::after': {
+      borderBottom: 'none !important',
+    },
+
+    '&.Mui-focused': {
+      borderColor: '#1976d2',
+      backgroundColor: '#fff',
     },
   },
+
   '& .MuiInputLabel-root': {
     color: '#1976d2',
     fontSize: '0.875rem',
@@ -42,6 +52,7 @@ const RedditTextField = styled((props) => (
     },
   },
 }));
+
 
 export default function AddDeductionForm({ onCancel, onSave, editId, editReimbursement, error }) {
   const [formData, setFormData] = useState(
@@ -59,17 +70,63 @@ export default function AddDeductionForm({ onCancel, onSave, editId, editReimbur
       : {
           name: '',
           type: '',
-          date: new Date().toISOString().split('T')[0], 
+          date: moment().format('DD-MM-YYYY'), 
           deductFrom: '',
-          amount: '$ ',
+          amount: '',
           document: 'Screenshot.20231203',
           recurring: false,
           remarks: '',
         }
   );
 
+  const [errors, setErrors] = useState({
+    name: '',
+    // Add other field errors if needed
+  });
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+  
+    // Validation logic for 'name' field
+    if (name === 'name') {
+      const alphaSpaceRegex = /^[A-Za-z ]*$/;
+      const doubleSpaceRegex = /\s{2,}/;
+  
+      if (!alphaSpaceRegex.test(value)) {
+        setErrors((prev) => ({
+          ...prev,
+          name: 'Only alphabets are allowed.',
+        }));
+        return;
+      }
+  
+      if (doubleSpaceRegex.test(value)) {
+        setErrors((prev) => ({
+          ...prev,
+          name: 'Double spaces are not allowed.',
+        }));
+        return;
+      }
+  
+      setErrors((prev) => ({ ...prev, name: '' }));
+    }
+  
+    // Validation logic for 'amount' field
+    if (name === 'amount') {
+      const amountRegex = /^[0-9]*\.?[0-9]*$/; // allows decimals
+    
+      if (!amountRegex.test(value)) {
+        setErrors((prev) => ({
+          ...prev,
+          amount: 'Only numbers and one decimal point allowed.',
+        }));
+        return;
+      }
+    
+      setErrors((prev) => ({ ...prev, amount: '' }));
+    }    
+  
+    // Set the value if everything is valid
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
@@ -79,7 +136,7 @@ export default function AddDeductionForm({ onCancel, onSave, editId, editReimbur
   const handleSave = () => {
     const amount = parseFloat(formData.amount.replace('$', '').trim());
     if (isNaN(amount)) return;
-    if (!formData.date) return; 
+    if (!formData.date) return;
     onSave({
       name: formData.name,
       category: formData.type,
@@ -104,7 +161,6 @@ export default function AddDeductionForm({ onCancel, onSave, editId, editReimbur
           </Typography>
         </Box>
 
-        {/* Added error alert */}
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -113,14 +169,17 @@ export default function AddDeductionForm({ onCancel, onSave, editId, editReimbur
 
         <Box>
           <Box sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
-            <RedditTextField
-              fullWidth
-              id="name"
-              name="name"
-              label="Name"
-              value={formData.name}
-              onChange={handleChange}
-            />
+          <RedditTextField
+            fullWidth
+            id="name"
+            name="name"
+            label="Name"
+            value={formData.name}
+            onChange={handleChange}
+            error={!!errors.name}
+            helperText={errors.name}
+          />
+
             <RedditTextField
               fullWidth
               id="type-select"
@@ -131,7 +190,7 @@ export default function AddDeductionForm({ onCancel, onSave, editId, editReimbur
               onChange={handleChange}
             >
               <MenuItem value="Training Cost">Training Cost</MenuItem>
-              <MenuItem value="Travel">Travel</MenuItem>
+              <MenuItem value="My Salary">My Salary</MenuItem>
               <MenuItem value="My Expenses">My Expenses</MenuItem>
             </RedditTextField>
           </Box>
@@ -148,20 +207,10 @@ export default function AddDeductionForm({ onCancel, onSave, editId, editReimbur
               InputLabelProps={{ shrink: true }}
               InputProps={{
                 endAdornment: (
-                  <IconButton aria-label="calendar" title="Calendar" disableRipple>
+                  <IconButton aria-label="calendar" title="Calendar">
                     <CalendarTodayOutlinedIcon fontSize="small" sx={{ color: '#1976d2' }} />
                   </IconButton>
                 ),
-                sx: {
-                  '& input::-webkit-calendar-picker-indicator': { display: 'none' },
-                  '& input': { cursor: 'pointer', borderBottom: 'none' },
-                },
-              }}
-              sx={{
-                '& .MuiFilledInput-root': {
-                  paddingRight: '8px',
-                  '&:before, &:after': { borderBottom: 'none' },
-                },
               }}
             />
             <RedditTextField
@@ -174,8 +223,8 @@ export default function AddDeductionForm({ onCancel, onSave, editId, editReimbur
               onChange={handleChange}
             >
               <MenuItem value="Payroll">Payroll</MenuItem>
-              <MenuItem value="Credit Summary">Credit Summary</MenuItem>
-              <MenuItem value="PF Fund">PF Fund</MenuItem>
+              <MenuItem value="Bank Balance">Bank Balance</MenuItem>
+              <MenuItem value="Kidney">Kidney</MenuItem>
             </RedditTextField>
           </Box>
 
@@ -187,6 +236,11 @@ export default function AddDeductionForm({ onCancel, onSave, editId, editReimbur
               label="Deduction Amount"
               value={formData.amount}
               onChange={handleChange}
+              error={Boolean(errors.amount)}
+              helperText={errors.amount}
+              InputProps={{
+                startAdornment: <InputAdornment position="start" color>$</InputAdornment>,
+              }}
             />
             <Box sx={{ width: '100%' }}>
               <RedditTextField
@@ -275,9 +329,9 @@ export default function AddDeductionForm({ onCancel, onSave, editId, editReimbur
         <Button
           variant="text"
           onClick={onCancel}
-          sx={{ textTransform: 'none', color: 'text.secondary' }}
+          sx={{ textTransform: 'Capitalize', color: 'text.secondary' }}
         >
-          Cancel
+          cancel
         </Button>
         <Button
           variant="contained"
