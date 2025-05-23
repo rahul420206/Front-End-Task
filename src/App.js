@@ -12,6 +12,7 @@ const theme = createTheme({
 
 function App() {
   const [showAddDeductionForm, setShowAddDeductionForm] = useState(false);
+  const [saveSuccessTrigger, setSaveSuccessTrigger] = useState(0);
   const [reimbursements, setReimbursements] = useState([
     {
       id: 1,
@@ -83,18 +84,17 @@ function App() {
     );
     if (isDuplicate) {
       setError('This reimbursement already exists.');
+      setTimeout(() => setError(''), 2000);
       return;
     }
 
     if (editId) {
-      // Update existing reimbursement with all fields
       setReimbursements((prev) =>
         prev.map((item) =>
           item.id === editId ? { ...item, ...newDeduction } : item
         )
       );
     } else {
-      // Add new reimbursement with all fields
       setReimbursements((prev) => [
         ...prev,
         { id: prev.length + 1, ...newDeduction },
@@ -102,7 +102,8 @@ function App() {
     }
     setEditId(null);
     setShowAddDeductionForm(false);
-    setError(''); // Clear error on successful save
+    setError('');
+    setSaveSuccessTrigger((prev) => prev + 1); // Trigger success message
   };
 
   return (
@@ -135,7 +136,8 @@ function App() {
                 onSave={handleSaveDeduction}
                 editId={editId}
                 editReimbursement={reimbursements.find((item) => item.id === editId)}
-                error={error} // Pass error to form
+                error={error}
+                onSaveSuccess={() => setSaveSuccessTrigger((prev) => prev + 1)} // Pass callback
               />
             ) : (
               <ReimbursementsList
@@ -143,6 +145,7 @@ function App() {
                 onEdit={handleEditClick}
                 onDelete={handleDeleteClick}
                 reimbursements={reimbursements}
+                onSaveSuccess={saveSuccessTrigger} // Pass trigger
               />
             )}
           </CardContent>

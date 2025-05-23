@@ -1,12 +1,22 @@
-import React from 'react';
-import { Box, Typography, Button, List, ListItem, ListItemText, IconButton, Divider } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Button, List, ListItem, ListItemText, IconButton, Divider, Alert } from '@mui/material';
 import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import AttachMoneyRoundedIcon from '@mui/icons-material/AttachMoneyRounded';
 
-function ReimbursementsList({ onAddNew, onEdit, onDelete, reimbursements }) {
+function ReimbursementsList({ onAddNew, onEdit, onDelete, reimbursements, onSaveSuccess }) {
   const totalReimbursements = reimbursements.reduce((sum, item) => sum + item.amount, 0);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Trigger success message when onSaveSuccess is called
+  useEffect(() => {
+    if (onSaveSuccess) {
+      setSuccessMessage('Reimbursement saved successfully.');
+      const timer = setTimeout(() => setSuccessMessage(''), 2000);
+      return () => clearTimeout(timer); // Cleanup timer on unmount
+    }
+  }, [onSaveSuccess]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -27,6 +37,23 @@ function ReimbursementsList({ onAddNew, onEdit, onDelete, reimbursements }) {
           Add New
         </Button>
       </Box>
+
+      {successMessage && (
+        <Alert
+          severity="success"
+          sx={{
+            mb: 2,
+            mx: 2, // Margin on sides for alignment
+            backgroundColor: '#4caf50',
+            color: '#fff',
+            '& .MuiAlert-icon': {
+              color: '#fff',
+            },
+          }}
+        >
+          {successMessage}
+        </Alert>
+      )}
 
       <List sx={{ flexGrow: 1 }}>
         {reimbursements.map((reimbursement, index) => (
@@ -67,8 +94,7 @@ function ReimbursementsList({ onAddNew, onEdit, onDelete, reimbursements }) {
                   secondary={
                     [
                       reimbursement.category,
-                      `Adding to ${reimbursement.deductFrom}`
-,
+                      `Adding to ${reimbursement.deductFrom}`,
                     ]
                       .filter(Boolean)
                       .join(' \u00A0\u00A0\u2022\u00A0\u00A0 ')
